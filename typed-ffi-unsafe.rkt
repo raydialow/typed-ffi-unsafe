@@ -2,7 +2,7 @@
 
 ; ISSUES:
 ;  keyword arguments are unsupported afaik in require/typed!
-;    EFFECTS: ffi-lib, _cprocedure, _enum, and _bitmask. These contracts are insufficient.
+;    EFFECTS: ffi-lib, _cprocedure, _enum, _bitmask, list->cblock, and vector->cblock. These contracts are insufficient.
 ;  array-set! penultimate arg is variadic: unsupported afaik in require/typed!
 ;    EFFECTS: array-set! only. This is the only procedure with a second-to-last variadic arg.
 ;  CType values raise "unable to protect opaque value" deprecation warning
@@ -208,24 +208,26 @@
                        [prop:cpointer Struct-Type-Property]
                
                        ;; Tagged C Pointer Types
-                       [_cpointer (->* (Any)
-                                       ((Option CType) (Option (-> Any Any)) (Option (-> Any Any)))
-                                       CType)]
-                       [_cpointer/null (->* (Any)
-                                            ((Option CType)
-                                             (Option (-> Any Any))
-                                             (Option (-> Any Any)))
-                                            CType)]
+                       [_cpointer (case-> [-> Any CType]
+                                          [-> Any (Option CType) CType]
+                                          [-> Any
+                                              (Option CType)
+                                              (Option (-> Any Any))
+                                              (Option (-> Any Any))
+                                              CType])]
+                       [_cpointer/null (case-> [-> Any CType]
+                                          [-> Any (Option CType) CType]
+                                          [-> Any
+                                              (Option CType)
+                                              (Option (-> Any Any))
+                                              (Option (-> Any Any))
+                                              CType])]
                        [cpointer-has-tag? (-> CPointer Any Boolean)]
-                       [cpointer-push-tag? (-> CPointer Any Void)]
+                       [cpointer-push-tag! (-> CPointer Any Void)]
                        
                        ;; Miscellaneous Support
-                       [list->cblock (->* ((Listof Any) CType)
-                                          ((Option Nonnegative-Integer) (Option Symbol))
-                                          CPointer)]
-                       [vector->cblock (->* ((Vectorof Any) CType)
-                                            ((Option Nonnegative-Integer) (Option Symbol))
-                                            CPointer)]
+                       [list->cblock Procedure] ;kwargs
+                       [vector->cblock Procedure] ;kwargs
                        [vector->cpointer (-> (Vectorof Any) CPointer)]
                        [flvector->cpointer (-> FlVector CPointer)]
                        [saved-errno (case-> [-> Integer] [-> Integer Void])]
