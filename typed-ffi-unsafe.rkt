@@ -1,8 +1,24 @@
 #lang typed/racket
 
+#|
+
+    Copyright 2020 June Sage Rana
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the fuck around and find out license v0.1 as
+    published in this program.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+
+    You should have received a copy of the the fuck around and find out
+    license v0.1 along with this program.  If not, see
+    <https://paste.sr.ht/blob/d581b82a39d6f36f2f4c541785cee349b2549699>.
+
+|#
+
 ; ISSUES:
-;  keyword arguments are unsupported afaik in require/typed!
-;    EFFECTS: ffi-lib, _cprocedure, _enum, _bitmask, list->cblock, and vector->cblock. These contracts are insufficient.
 ;  array-set! penultimate arg is variadic: unsupported afaik in require/typed!
 ;    EFFECTS: array-set! only. This is the only procedure with a second-to-last variadic arg.
 ;  CType values raise "unable to protect opaque value" deprecation warning
@@ -36,7 +52,12 @@
                        [#:opaque CPointerPred cpointer-predicate-procedure?]
 
                        ;; Loading Foreign Libraries
-                       [ffi-lib Procedure]
+                       [ffi-lib (->* ((Option Path))
+                                     ((U (Option String) (Listof (Option String)))
+                                      #:get-lib-dirs (-> (Listof Path))
+                                      #:global? Any
+                                      #:custodian (U 'place Custodian False))
+                                     Any)]
                        [get-ffi-obj (->* (ObjName (Option (U FFI-Lib Path)) CType)
                                          ((Option (-> Any)))
                                          Any)]
@@ -135,7 +156,17 @@
                        [_gcable (-> CType CType)]
 
                        ;; Function Types
-                       [_cprocedure Procedure]
+                       [_cprocedure (->* ((Listof CType) CType)
+                                         (#:abi ABI
+                                          #:atomic? Any
+                                          #:async-apply (Option AsyncApply)
+                                          #:lock-name (Option String)
+                                          #:in-original-place? Any
+                                          #:blocking? Any
+                                          #:save-errno (Option SaveErrno)
+                                          #:wrapper (Option Wrapper)
+                                          #:keep Keeper)
+                                         Any)]
                        [function-ptr (-> (U CPointer Procedure) CType CPointer)]
                
                        ;; C Struct Types
@@ -168,8 +199,8 @@
                        [union-ptr (-> CUnion CPointer)]
                
                        ;; Enumerations and Masks
-                       [_enum Procedure]
-                       [_bitmask Procedure]
+                       [_enum (->* ((Listof Any)) (CType #:unknown Any) CType)]
+                       [_bitmask (->* ((U Symbol (Listof Any))) (CType) CType)]
                
                        ;; Pointer Functions
                        [ptr-equal? (-> CPointer CPointer Boolean)]
@@ -226,8 +257,14 @@
                        [cpointer-push-tag! (-> CPointer Any Void)]
                        
                        ;; Miscellaneous Support
-                       [list->cblock Procedure] ;kwargs
-                       [vector->cblock Procedure] ;kwargs
+                       [list->cblock (->* ((Listof Any) CType)
+                                          ((Option Nonnegative-Integer)
+                                           #:malloc-mode (Option MallocMode))
+                                          CPointer)] 
+                       [vector->cblock (->* ((Vectorof Any) CType)
+                                            ((Option Nonnegative-Integer)
+                                             #:malloc-mode (Option MallocMode))
+                                            CPointer)] 
                        [vector->cpointer (-> (Vectorof Any) CPointer)]
                        [flvector->cpointer (-> FlVector CPointer)]
                        [saved-errno (case-> [-> Integer] [-> Integer Void])]
@@ -237,3 +274,4 @@
                        [cblock->vector (-> Any CType Nonnegative-Integer (Vectorof Any))])
 
 (provide (all-defined-out))
+

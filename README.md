@@ -2,8 +2,6 @@
 Provide FFI/Unsafe for Typed/Racket
 
 ## ISSUES:
-* Keyword arguments are unsupported afaik in require/typed!
-  * EFFECTS: ffi-lib, _cprocedure, _enum, _bitmask, list->cblock, and vector->cblock. These contracts are insufficient.
 * array-set! penultimate arg is variadic: unsupported afaik in require/typed!
   * EFFECTS: array-set! only. This is the only procedure with a second-to-last variadic arg.
 * CType values raise "unable to protect opaque value" deprecation warning
