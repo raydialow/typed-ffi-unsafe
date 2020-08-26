@@ -200,7 +200,7 @@
                
                        ;; Enumerations and Masks
                        [_enum (->* ((Listof Any)) (CType #:unknown Any) CType)]
-                       [_bitmask (->* ((U Symbol (Listof Any))) (CType) CType)]
+                       [_bitmask (-> Symbol (Listof Any) CType * CType)]
                
                        ;; Pointer Functions
                        [ptr-equal? (-> CPointer CPointer Boolean)]
